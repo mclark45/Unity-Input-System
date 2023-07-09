@@ -4,51 +4,33 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    private PlayerInputActions _input;
-    private MeshRenderer _render;
-
+    private PlayerInputAction _input;
+    private bool _jumped = false;
     void Start()
     {
-        _input = new PlayerInputActions();
-
+        _input = new PlayerInputAction();
         _input.Player.Enable();
-
-        _input.Player.ColorChange.performed += ColorChange_performed;
-        _input.Player.SwitchMaps.performed += SwitchMaps_performed;
-
-        _render = GetComponent<MeshRenderer>();
+        _input.Player.Jump.performed += Jump_performed;
+        _input.Player.Jump.canceled += Jump_canceled;
     }
 
-    private void SwitchMaps_performed(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    private void Jump_canceled(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        _input.Player.Disable();
-        _input.Driving.Enable();
+        //light jump or none
+        var forceEffect = context.duration;
+        GetComponent<Rigidbody>().AddForce(Vector3.up * (5f * (float)forceEffect), ForceMode.Impulse);
     }
 
-    private void ColorChange_performed(UnityEngine.InputSystem.InputAction.CallbackContext context)
+    private void Jump_performed(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (_render != null)
-            _render.material.color = Random.ColorHSV();
+        Debug.Log("Full Jump");
+        _jumped = true;
+        GetComponent<Rigidbody>().AddForce(Vector3.up * 5f, ForceMode.Impulse);
     }
 
     // Update is called once per frame
     void Update()
     {
-        Rotating();
-        Driving();
-    }
-
-    private void Rotating()
-    {
-        var rotateDirection = _input.Player.Rotate.ReadValue<float>();
-
-        transform.Rotate(Vector3.up * Time.deltaTime * 30f * rotateDirection);
-    }
-
-    private void Driving()
-    {
-        var move = _input.Driving.Movement.ReadValue<Vector2>();
-
-        transform.Translate(new Vector3(move.x, 0, move.y) * Time.deltaTime * 5f);
+        
     }
 }
